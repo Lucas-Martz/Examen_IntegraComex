@@ -1,0 +1,103 @@
+﻿@model IEnumerable<Examen_IntegraComex.Models.Cliente>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@{
+    bool mostrarInactivos = false;
+    bool.TryParse(Request["mostrarInactivos"], out mostrarInactivos);
+}
+
+<div class="row" style="margin-bottom:15px;">
+    <div class="col-sm-6">
+        <h2 style="margin-top:0;">Clientes</h2>
+    </div>
+    <div class="col-sm-6 text-right">
+        @Html.ActionLink("Nuevo cliente", "Create", null, new { @class = "btn btn-primary" })
+        @Html.ActionLink(mostrarInactivos ? "Ver solo activos" : "Mostrar inactivos",
+            "Index",
+            new { mostrarInactivos = !mostrarInactivos },
+            new { @class = "btn btn-default", style = "margin-left:8px;" })
+    </div>
+</div>
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No hay clientes cargados.
+    </div>
+}
+else
+{
+    <table class="table">
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Cuit)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.RazonSocial)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Telefono)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Direccion)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Activo)
+            </th>
+            <th></th>
+        </tr>
+
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Cuit)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.RazonSocial)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Telefono)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Direccion)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Activo)
+                </td>
+                <td class="text-nowrap">
+                    <div class="btn-group btn-group-sm">
+                        @if (item.Activo)
+                        {
+                            @Html.ActionLink("Editar", "Edit", new { id = item.IdCliente }, new { @class = "btn btn-default btn-sm" })
+                            @Html.ActionLink("Detalle", "Details", new { id = item.IdCliente }, new { @class = "btn btn-default btn-sm" })
+                            @Html.ActionLink("Desactivar", "Delete", new { id = item.IdCliente }, new { @class = "btn btn-danger btn-sm" })
+                        }
+                        else
+                        {
+                            using (Html.BeginForm("Reactivar", "Clientes", new { id = item.IdCliente }, FormMethod.Post, new { style = "display:inline;" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success btn-sm">Reactivar</button>
+                            }
+                        }
+
+                                    </div>
+                </td>
+
+            </tr>
+        }
+
+    </table>
+}
+
+

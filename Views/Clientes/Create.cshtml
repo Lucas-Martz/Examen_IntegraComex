@@ -1,0 +1,146 @@
+﻿@model Examen_IntegraComex.Models.Cliente
+
+@{
+    ViewBag.Title = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Create</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <strong>Datos del cliente</strong>
+        </div>
+        <div class="panel-body">
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+            <div class="form-group">
+                @Html.LabelFor(model => model.Cuit, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(model => model.Cuit, new { @class = "form-control", id = "Cuit", maxlength = "11", autocomplete = "off" })
+                    @Html.ValidationMessageFor(model => model.Cuit, "", new { @class = "text-danger" })
+                    <small id="cuitHelp" class="text-muted">Ingresá 11 dígitos sin guiones.</small>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.RazonSocial, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(m => m.RazonSocial, new { @class = "form-control", @readonly = "readonly", style = "background:#f7f7f7;" })
+                    @Html.ValidationMessageFor(model => model.RazonSocial, "", new { @class = "text-danger" })
+                    <div id="rsStatus" class="help-block"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.Telefono, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.Telefono, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.Telefono, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.Direccion, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.Direccion, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.Direccion, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.LabelFor(model => model.Activo, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.EditorFor(model => model.Activo)
+                        @Html.ValidationMessageFor(model => model.Activo, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-10">
+                    <input type="submit" value="Create" class="btn btn-default" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+
+    <script>
+        (function () {
+            var $cuit = $("#Cuit");
+            var $rs = $("#RazonSocial");
+            var $status = $("#rsStatus");
+
+            var lastCuit = "";
+            var timer = null;
+
+            function setStatus(msg) {
+                $status.text(msg || "");
+            }
+
+            function limpiarRazonSocial() {
+                $rs.val("");
+            }
+
+            function esCuitValido(v) {
+                return /^\d{11}$/.test(v);
+            }
+
+            function consultarRazonSocial(cuit) {
+                setStatus("Consultando razón social...");
+                $.ajax({
+                    url: "@Url.Action("GetRazonSocialByCuit", "Clientes")",
+                    type: "GET",
+                    data: { cuit: cuit },
+                    cache: false
+                })
+                .done(function (resp) {
+                    if (resp && resp.ok) {
+                        $rs.val(resp.razonSocial);
+                        setStatus("Razón social obtenida.");
+                    } else {
+                        limpiarRazonSocial();
+                        setStatus((resp && resp.error) ? resp.error : "No se pudo obtener razón social.");
+                    }
+                })
+                .fail(function () {
+                    limpiarRazonSocial();
+                    setStatus("Error de comunicación con el servidor.");
+                });
+            }
+
+            $cuit.on("input", function () {
+                var v = ($cuit.val() || "").trim();
+
+                clearTimeout(timer);
+                timer = setTimeout(function () {
+
+                    if (v === lastCuit) return;
+                    lastCuit = v;
+
+                    if (!esCuitValido(v)) {
+                        limpiarRazonSocial();
+                        setStatus(v.length === 0 ? "" : "CUIT inválido (deben ser 11 dígitos numéricos).");
+                        return;
+                    }
+
+                    consultarRazonSocial(v);
+
+                }, 350);
+            });
+        })();
+    </script>
+}
